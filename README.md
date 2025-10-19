@@ -4,7 +4,7 @@
 
 A tool for reviewing GitHub pull requests using AI agents. It adds a `/review` command to AI agents, automating detailed pull request reviews.
 
-Currently supports **GitHub Copilot**. Support for other AI agents is planned for the future.
+Currently supports **GitHub Copilot** and **Cursor**. You can specify which AI agent to install prompts for using command-line options.
 
 ## Features
 
@@ -18,13 +18,14 @@ Currently supports **GitHub Copilot**. Support for other AI agents is planned fo
 Run the following command from the root directory of your repository:
 
 ```bash
+# Install for GitHub Copilot (default)
 npx pr-review
-```
 
-You can specify the review language with the `--lang` option. For example, to receive reviews in Japanese:
+# Install for Cursor
+npx pr-review --cursor
 
-```bash
-npx pr-review --lang ja
+# Specify language
+npx pr-review --copilot --lang ja
 ```
 
 This command will add the `.review` directory and prompt templates to your project.
@@ -77,6 +78,8 @@ You can add project-specific review guidelines by creating a `.review/GUIDELINES
 
 ## CLI Options
 
+- `--copilot` - Install prompts for GitHub Copilot (default)
+- `--cursor` - Install prompts for Cursor
 - `--lang <locale>` - Set the review language (e.g., `ja`, `en`)
 - `-h`, `--help` - Display help information
 
@@ -84,8 +87,10 @@ You can add project-specific review guidelines by creating a `.review/GUIDELINES
 
 When you run `npx pr-review`:
 
-1. Creates a `.review` directory
-2. Copies prompt templates to `.review/prompts`
+1. Creates a `.review` directory for configuration
+2. Copies prompt templates to the agent-specific directory based on the specified option (defaults to GitHub Copilot):
+   - `--copilot` or default: `.github/prompts`
+   - `--cursor`: `.cursor/commands`
 3. Generates/updates the configuration file `.review/config.yml`
 4. Saves settings such as language preferences
 

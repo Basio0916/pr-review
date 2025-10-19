@@ -4,7 +4,7 @@
 
 AI エージェントを使って GitHub のプルリクエストをレビューするツールです。AI エージェントに `/review` コマンドを追加し、プルリクエストの詳細なレビューを自動化します。
 
-現在は **GitHub Copilot** に対応しています。将来的に他の AI エージェントもサポート予定です。
+現在は **GitHub Copilot** および **Cursor** に対応しています。コマンドラインオプションで、どの AI エージェント用のプロンプトをインストールするかを指定できます。
 
 ## 特徴
 
@@ -18,13 +18,14 @@ AI エージェントを使って GitHub のプルリクエストをレビュー
 リポジトリのルートディレクトリで以下のコマンドを実行してください:
 
 ```bash
+# GitHub Copilot 用にインストール(デフォルト)
 npx pr-review
-```
 
-`--lang` オプションでレビュー言語を指定できます。例えば、日本語でレビューを受けたい場合:
+# Cursor 用にインストール
+npx pr-review --cursor
 
-```bash
-npx pr-review --lang ja
+# 言語を指定
+npx pr-review --copilot --lang ja
 ```
 
 このコマンドにより、`.review` ディレクトリとプロンプトテンプレートがプロジェクトに追加されます。
@@ -77,6 +78,8 @@ npx pr-review --lang ja
 
 ## CLI オプション
 
+- `--copilot` - GitHub Copilot 用のプロンプトをインストール(デフォルト)
+- `--cursor` - Cursor 用のプロンプトをインストール
 - `--lang <locale>` - レビュー言語を設定 (例: `ja`, `en`)
 - `-h`, `--help` - ヘルプを表示
 
@@ -84,8 +87,10 @@ npx pr-review --lang ja
 
 `npx pr-review` を実行すると:
 
-1. `.review` ディレクトリを作成
-2. プロンプトテンプレートを `.review/prompts` にコピー
+1. 設定用の `.review` ディレクトリを作成
+2. 指定されたオプションに基づいて、エージェント固有のディレクトリにプロンプトテンプレートをコピー(デフォルトは GitHub Copilot):
+   - `--copilot` またはデフォルト: `.github/prompts`
+   - `--cursor`: `.cursor/commands`
 3. 設定ファイル `.review/config.yml` を生成・更新
 4. 言語設定などの構成を保存
 
