@@ -6,19 +6,35 @@ const YAML = require("yaml");
 
 function printUsage() {
   const message =
-    "Usage: pr-review [--lang <locale>]\n\n" +
+    "Usage: pr-review [options]\n\n" +
     "Options:\n" +
+    "  --copilot          Install prompts for GitHub Copilot (default)\n" +
+    "  --cursor           Install prompts for Cursor\n" +
     "  --lang <locale>    Language code stored in .review/config.yml (default: template value)\n" +
     "  -h, --help         Show this help message";
   console.log(message);
 }
 
 function parseArgs(argv) {
-  const result = { lang: undefined, help: false };
+  const result = { lang: undefined, help: false, agent: undefined };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "-h" || arg === "--help") {
       result.help = true;
+      continue;
+    }
+    if (arg === "--copilot") {
+      if (result.agent) {
+        throw new Error("Multiple agent options specified. Please specify only one.");
+      }
+      result.agent = "copilot";
+      continue;
+    }
+    if (arg === "--cursor") {
+      if (result.agent) {
+        throw new Error("Multiple agent options specified. Please specify only one.");
+      }
+      result.agent = "cursor";
       continue;
     }
     if (arg === "--lang") {
@@ -51,6 +67,38 @@ function copyDirectory(source, destination) {
   }
   ensureDirectory(destination);
   fs.cpSync(source, destination, { recursive: true, force: true });
+}
+
+function getAgentConfig(agentName) {
+  const cwd = process.cwd();
+
+  switch (agentName) {
+    case "copilot":
+      return {
+        name: "github-copilot",
+        promptDir: path.join(cwd, ".github", "prompts"),
+        templateSubDir: "github",
+      };
+    case "cursor":
+      return {
+        name: "cursor",
+        promptDir: path.join(cwd, ".cursor", "commands"),
+        templateSubDir: "cursor",
+      };
+    default:
+      throw new Error(`Unknown agent: ${agentName}`);
+  }
+}
+
+function copyPromptsForAgent(templateRoot, agent) {
+  const sourceDir = path.join(templateRoot, "prompts", agent.templateSubDir);
+
+  if (!fs.existsSync(sourceDir)) {
+    throw new Error(`No template found for ${agent.name} at ${sourceDir}`);
+  }
+
+  copyDirectory(sourceDir, agent.promptDir);
+  return { agent: agent.name, dir: agent.promptDir };
 }
 
 function loadTemplateConfig(templatePath) {
@@ -110,9 +158,10 @@ function main() {
 
     const templateRoot = path.resolve(__dirname, "..", "templates");
 
-    const promptsTemplateDir = path.join(templateRoot, "prompts");
-    const promptsDestinationDir = path.join(reviewDir, "prompts");
-    copyDirectory(promptsTemplateDir, promptsDestinationDir);
+    // Get agent configuration (default: copilot)
+    const agentName = parsed.agent || "copilot";
+    const agent = getAgentConfig(agentName);
+    const copiedPrompt = copyPromptsForAgent(templateRoot, agent);
 
     const configTemplatePath = path.join(templateRoot, "config", "config.yml");
     const configPath = path.join(reviewDir, "config.yml");
@@ -126,8 +175,10 @@ function main() {
     }
     writeConfig(configPath, mergedConfig);
 
-    console.log(`✅ PR review templates installed in ${reviewDir}`);
+    console.log(`✅ PR review templates installed successfully`);
     console.log(`   Language set to '${mergedConfig.lang}' in ${configPath}`);
+    console.log(`   Prompts copied to:`);
+    console.log(`     - ${copiedPrompt.agent}: ${copiedPrompt.dir}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exitCode = 1;
