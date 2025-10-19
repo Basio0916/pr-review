@@ -1,6 +1,6 @@
 {
   "name": "pr-review",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "AI-powered GitHub pull request review tool that adds /review command to AI agents.",
   "bin": {
     "pr-review": "bin/pr-review.js"
