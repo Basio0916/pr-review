@@ -1,0 +1,3 @@
+# Default configuration for pull request review workflows.
+# The installer replaces or appends fields based on CLI arguments.
+lang: en
